@@ -1,11 +1,11 @@
-﻿/* Стили, относящиеся к странице */
+﻿/* Page-specific styling */
 
 html {
     position: relative;
     min-height: 100%;
 }
 body {
-    margin: 0 0 40px; /* низ = высота нижнего колонтитула */
+    margin: 0 0 40px; /* bottom = footer height */
 }
 .footer {
     position: absolute;

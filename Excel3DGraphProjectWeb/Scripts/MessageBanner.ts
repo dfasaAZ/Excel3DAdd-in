@@ -1,10 +1,12 @@
-// Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license.
+﻿// Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license.
+
 /**
  * MessageBanner component
  *
  * A component to display error messages
  *
  */
+
 /**
  * @namespace components
  */
@@ -18,7 +20,9 @@ components.MessageBanner = function (container) {
     this.container = container;
     this.init();
 };
+
 components.MessageBanner.prototype = (function () {
+
     var _clipper;
     var _bufferSize;
     var _textContainerMaxWidth = 700;
@@ -32,6 +36,7 @@ components.MessageBanner.prototype = (function () {
     var _bufferElementsWidth = 88;
     var _bufferElementsWidthSmall = 35;
     var SMALL_BREAK_POINT = 480;
+
     /**
      * sets styles on resize
      */
@@ -39,11 +44,11 @@ components.MessageBanner.prototype = (function () {
         _clientWidth = _errorBanner.offsetWidth;
         if (window.innerWidth >= SMALL_BREAK_POINT) {
             _resizeRegular();
-        }
-        else {
+        } else {
             _resizeSmall();
         }
     };
+
     /**
      * resize above 480 pixel breakpoint
      */
@@ -52,8 +57,7 @@ components.MessageBanner.prototype = (function () {
             _textWidth = "auto";
             _chevronButton.className = "MessageBanner-expand";
             _collapse();
-        }
-        else {
+        } else {
             _textWidth = Math.min(_clientWidth - _bufferSize, _textContainerMaxWidth) + "px";
             if (_chevronButton.className.indexOf("is-visible") === -1) {
                 _chevronButton.className += " is-visible";
@@ -61,6 +65,7 @@ components.MessageBanner.prototype = (function () {
         }
         _clipper.style.width = _textWidth;
     };
+
     /**
      * resize below 480 pixel breakpoint
      */
@@ -68,8 +73,7 @@ components.MessageBanner.prototype = (function () {
         if (_clientWidth - (_bufferElementsWidthSmall + _closeButton.offsetWidth) > _initTextWidth) {
             _textWidth = "auto";
             _collapse();
-        }
-        else {
+        } else {
             _textWidth = _clientWidth - (_bufferElementsWidthSmall + _closeButton.offsetWidth) + "px";
         }
         _clipper.style.width = _textWidth;
@@ -86,6 +90,7 @@ components.MessageBanner.prototype = (function () {
         _bufferSize = _actionButton.offsetWidth + _bufferElementsWidth;
         _closeButton = context.container.querySelector('.MessageBanner-close');
     };
+
     /**
      * expands component to show full error message
      */
@@ -94,6 +99,7 @@ components.MessageBanner.prototype = (function () {
         _errorBanner.className += " is-expanded";
         icon.className = "ms-Icon ms-Icon--chevronsUp";
     };
+
     /**
      * collapses component to only show truncated message
      */
@@ -102,14 +108,15 @@ components.MessageBanner.prototype = (function () {
         _errorBanner.className = "MessageBanner";
         icon.className = "ms-Icon ms-Icon--chevronsDown";
     };
+
     var _toggleExpansion = function () {
         if (_errorBanner.className.indexOf("is-expanded") > -1) {
             _collapse();
-        }
-        else {
+        } else {
             _expand();
         }
     };
+
     /**
      * hides banner when close button is clicked
      */
@@ -121,12 +128,14 @@ components.MessageBanner.prototype = (function () {
             }, 500);
         }
     };
+
     /**
      * shows banner if the banner is hidden
      */
     var _showBanner = function () {
         _errorBanner.className = "MessageBanner";
     };
+
     /**
      * sets handlers for resize and button click events
      */
@@ -135,6 +144,7 @@ components.MessageBanner.prototype = (function () {
         _chevronButton.addEventListener("click", _toggleExpansion, false);
         _closeButton.addEventListener("click", _hideBanner, false);
     };
+
     /**
      * initializes component
      */
@@ -145,6 +155,7 @@ components.MessageBanner.prototype = (function () {
         _initTextWidth = _clipper.offsetWidth;
         _onResize();
     };
+
     return {
         init: init,
         showBanner: _showBanner,
@@ -152,4 +163,3 @@ components.MessageBanner.prototype = (function () {
         toggleExpansion: _toggleExpansion
     };
 }());
-//# sourceMappingURL=MessageBanner.js.map

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6F1E79B3-5517-464F-A14B-1669BEE0D22D}</ProjectGuid>
+    <ProjectGuid>{3C623BF0-F8AB-4695-910E-69E092B06FE0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Excel3DGraphProject</RootNamespace>
@@ -13,11 +13,11 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{C1CDDADD-2546-481F-9697-4EA41081F2FC};{14822709-B5A1-4724-98CA-57A101D1B079};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <IncludeAssemblyInPackage>False</IncludeAssemblyInPackage>
-    <AppFeaturePartId>{c70a6355-f27e-48e7-88e5-364623e42559}</AppFeaturePartId>
-    <WspPartId>{48cb8928-aec2-4def-8ea7-097b1c91c4b4}</WspPartId>
-    <WorkflowPartId>{55c319b4-3b3a-4958-b3dd-726f034dc898}</WorkflowPartId>
-    <CspkgPartId>{d8d3a07e-ff92-4920-bfd0-097e5fbb02e7}</CspkgPartId>
-    <SqlPackagePartId>{f0801789-abcd-424a-aedf-0fc6268910bb}</SqlPackagePartId>
+    <AppFeaturePartId>{28b95f17-7af5-4214-94d9-5792a9876add}</AppFeaturePartId>
+    <WspPartId>{8aca3a6a-84c8-40b7-925e-0d5bfa66824c}</WspPartId>
+    <WorkflowPartId>{62d932a7-04e5-4ec3-9c43-2006ce3f3cb2}</WorkflowPartId>
+    <CspkgPartId>{30fbeba2-39ea-485f-a197-f889cd2bd5df}</CspkgPartId>
+    <SqlPackagePartId>{981115d4-4247-427b-8bb2-24576f2c064c}</SqlPackagePartId>
     <ProjectMode>OfficeApp</ProjectMode>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <MinimumOfficeToolsVersion>14.0</MinimumOfficeToolsVersion>
@@ -43,7 +43,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="Excel3DGraphProjectManifest\SharePointProjectItem.spdata">
-      <SharePointProjectItemId>{f2a732fb-ac16-4fbf-a2cc-cbf9a61821c3}</SharePointProjectItemId>
+      <SharePointProjectItemId>{b053b45b-c299-464f-bc74-debafb53baf8}</SharePointProjectItemId>
     </None>
     <Content Include="Excel3DGraphProjectManifest\Excel3DGraphProject.xml">
       <OpcRelationship>manifest-oemanifest</OpcRelationship>
@@ -51,7 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Excel3DGraphProjectWeb\Excel3DGraphProjectWeb.csproj">
-      <Project>{78E6B216-1DC5-45C3-832D-6C6D45FB635A}</Project>
+      <Project>{D343EC69-C72A-4ADD-B057-099E7AF17E40}</Project>
       <Name>Excel3DGraphProjectWeb</Name>
       <Private>True</Private>
       <RoleType>Web</RoleType>

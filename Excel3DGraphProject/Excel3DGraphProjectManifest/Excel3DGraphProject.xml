@@ -7,89 +7,90 @@
           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
           xsi:type="TaskPaneApp">
 
-  <!-- Начало основных настроек: метаданные надстройки, используемые для всех версий Office, если не предоставлено переопределение. -->
+  <!-- Begin Basic Settings: Add-in metadata, used for all versions of Office unless override provided. -->
 
-  <!-- ВАЖНО! Идентификатор должен быть уникальным для надстройки. Если этот манифест используется многократно, измените идентификатор на новый GUID. -->
-  <Id>4b0f6498-7926-4b0f-9684-6a9a534a8104</Id>
+  <!-- IMPORTANT! Id must be unique for your add-in, if you reuse this manifest ensure that you change this id to a new GUID. -->
+  <Id>edab6aff-f882-4938-b2f7-e8e774597a0c</Id>
 
-  <!--Версия. Обновления из Магазина активируются, только если изменяется версия. -->
+  <!--Version. Updates from the store only get triggered if there is a version change. -->
   <Version>1.0.0.0</Version>
-  <ProviderName>[Имя поставщика]</ProviderName>
+  <ProviderName>[Provider name]</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <!-- Отображаемое имя надстройки. Используется в Магазине и различных местах пользовательского интерфейса Office, например в диалоговом окне надстройки. -->
+  <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
   <DisplayName DefaultValue="Excel3DGraphProject" />
   <Description DefaultValue="Excel3DGraphProject"/>
-  <!-- Значок надстройки. Используется на экранах установки и диалоговых окнах надстроек. -->
+  <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="~remoteAppUrl/Images/Button32x32.png" />
 
   <SupportUrl DefaultValue="http://www.contoso.com" />
-  <!-- Домены, которые будут разрешены при навигации. Например, если использовать ShowTaskpane, а затем указать ссылку "href", навигация будет разрешена только для домена, находящегося в списке. -->
+  <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
     <AppDomain>AppDomain1</AppDomain>
     <AppDomain>AppDomain2</AppDomain>
     <AppDomain>AppDomain3</AppDomain>
   </AppDomains>
-  <!--Конец основных настроек. -->
+  <!--End Basic Settings. -->
   
-  <!--Начало интеграции для режима TaskPane. Этот раздел будет использован, если отсутствуют VersionOverride или если версия клиента Office не поддерживает команды надстройки. -->
+  <!--Begin TaskPane Mode integration. This section is used if there are no VersionOverrides or if the Office client version does not support add-in commands. -->
   <Hosts>
     <Host Name="Workbook" />
   </Hosts>
   <DefaultSettings>
     <SourceLocation DefaultValue="~remoteAppUrl/Home.html" />
   </DefaultSettings>
-  <!-- Конец интеграции для режима области задач.  -->
+  <!-- End TaskPane Mode integration.  -->
 
   <Permissions>ReadWriteDocument</Permissions>
 
-  <!-- Начало интеграции для режима команд надстройки. -->
+  <!-- Begin Add-in Commands Mode integration. -->
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
     
-    <!-- Требуется узел Hosts. -->
+    <!-- The Hosts node is required. -->
     <Hosts>
-      <!-- Каждый узел может иметь разный набор команд. -->
-      <!-- Узел Excel — книга, узел Word — документ, а узел PowerPoint — презентация. -->
-      <!-- Убедитесь, что переопределяемые узлы соответствуют узлам, объявленным в верхнем разделе манифеста. -->
+      <!-- Each host can have a different set of commands. -->
+      <!-- Excel host is Workbook, Word host is Document, and PowerPoint host is Presentation. -->
+      <!-- Make sure the hosts you override match the hosts declared in the top section of the manifest. -->
       <Host xsi:type="Workbook">
-        <!-- Форм-фактор. Сейчас поддерживается только DesktopFormFactor. -->
+        <!-- Form factor. Currently only DesktopFormFactor is supported. -->
         <DesktopFormFactor>
-          <!--"Этот код позволяет отображать настраиваемое сообщение, когда надстройка успешно загружается после индивидуальной установки."-->
+          <!--"This code enables a customizable message to be displayed when the add-in is loaded successfully upon individual install."-->
           <GetStarted>
-            <!-- Заголовок выноски по началу работы. Атрибут resid указывает на ресурс ShortString -->
+            <!-- Title of the Getting Started callout. The resid attribute points to a ShortString resource -->
             <Title resid="Contoso.GetStarted.Title"/>
 
-            <!-- Описание выноски по началу работы. Значение resid указывает на ресурс LongString -->
+            <!-- Description of the Getting Started callout. resid points to a LongString resource -->
             <Description resid="Contoso.GetStarted.Description"/>
 
-            <!-- Указание ресурса URL-адреса, по которому приведены инструкции для использования надстройки. -->
+            <!-- Points to a URL resource which details how the add-in should be used. -->
             <LearnMoreUrl resid="Contoso.GetStarted.LearnMoreUrl"/>
           </GetStarted>
-          <!-- Файл функций является HTML-страницей, включающей JavaScript в местах, где вызываются функции для ExecuteAction.              FunctionFile можно рассматривать как ExecuteFunction кода программной части. -->
+          <!-- Function file is a HTML page that includes the JavaScript where functions for ExecuteAction will be called. 
+            Think of the FunctionFile as the code behind ExecuteFunction. -->
           <FunctionFile resid="Contoso.DesktopFunctionFile.Url" />
 
-          <!-- PrimaryCommandSurface — основная лента Office. -->
+          <!-- PrimaryCommandSurface is the main Office Ribbon. -->
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
-            <!-- Используйте OfficeTab для расширения существующей вкладки. Используйте CustomTab для создания новой вкладки. -->
+            <!-- Use OfficeTab to extend an existing Tab. Use CustomTab to create a new tab. -->
             <OfficeTab id="TabHome">
-              <!-- Укажите уникальный идентификатор для группы. Рекомендуется для всех идентификаторов создавать пространство имен с использованием названия компании. -->
+              <!-- Ensure you provide a unique id for the group. Recommendation for any IDs is to namespace using your company name. -->
               <Group id="Contoso.Group1">
-                <!-- Создайте метку для группы. Идентификатор ресурса должен указывать на ресурс короткой строки (ShortString). -->
+                <!-- Label for your group. resid must point to a ShortString resource. -->
                 <Label resid="Contoso.Group1Label" />
-                <!-- Значки. Обязательные размеры: 16, 32 и 80; дополнительные размеры: 20, 24, 40, 48 и 64. Настоятельно рекомендуется предоставлять все размеры для оптимальной работы. -->
-                <!-- Используйте значки в формате PNG. Все URL-адреса в разделе ресурсов должны использовать префикс HTTPS. -->
+                <!-- Icons. Required sizes 16,32,80, optional 20, 24, 40, 48, 64. Strongly recommended to provide all sizes for great UX. -->
+                <!-- Use PNG icons. All URLs on the resources section must use HTTPS. -->
                 <Icon>
                   <bt:Image size="16" resid="Contoso.tpicon_16x16" />
                   <bt:Image size="32" resid="Contoso.tpicon_32x32" />
                   <bt:Image size="80" resid="Contoso.tpicon_80x80" />
                 </Icon>
 
-                <!-- Элемент управления. Может иметь тип "Button" или "Menu". -->
+                <!-- Control. It can be of type "Button" or "Menu". -->
                 <Control xsi:type="Button" id="Contoso.TaskpaneButton">
                   <Label resid="Contoso.TaskpaneButton.Label" />
                   <Supertip>
-                    <!-- Заголовок подсказки. Идентификатор ресурса должен указывать на ресурс короткой строки (ShortString). -->
+                    <!-- ToolTip title. resid must point to a ShortString resource. -->
                     <Title resid="Contoso.TaskpaneButton.Label" />
-                    <!-- Описание подсказки. Идентификатор ресурса должен указывать на ресурс длинной строки (LongString). -->
+                    <!-- ToolTip description. resid must point to a LongString resource. -->
                     <Description resid="Contoso.TaskpaneButton.Tooltip" />
                   </Supertip>
                   <Icon>
@@ -98,10 +99,10 @@
                     <bt:Image size="80" resid="Contoso.tpicon_80x80" />
                   </Icon>
 
-                  <!-- Вот что происходит, когда активируется команда (например, при щелчке ленты). Поддерживаемые действия: ExecuteFunction или ShowTaskpane. -->
+                  <!-- This is what happens when the command is triggered (E.g. click on the Ribbon). Supported actions are ExecuteFunction or ShowTaskpane. -->
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>ButtonId1</TaskpaneId>
-                    <!-- Укажите идентификатор ресурса URL-адреса для расположения, которое будет отображаться в области задач. -->
+                    <!-- Provide a URL resource id for the location that will be displayed on the task pane. -->
                     <SourceLocation resid="Contoso.Taskpane.Url" />
                   </Action>
                 </Control>
@@ -112,7 +113,7 @@
       </Host>
     </Hosts>
     
-    <!-- Ресурсы можно использовать в разных узлах и форм-факторах. -->
+    <!-- You can use resources across hosts and form factors. -->
     <Resources>
       <bt:Images>
         <bt:Image id="Contoso.tpicon_16x16" DefaultValue="~remoteAppUrl/Images/Button16x16.png" />
@@ -124,19 +125,19 @@
         <bt:Url id="Contoso.Taskpane.Url" DefaultValue="~remoteAppUrl/Home.html" />
         <bt:Url id="Contoso.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
       </bt:Urls>
-      <!-- Максимальное число символов в короткой строке — 125. -->
+      <!-- ShortStrings max characters==125. -->
       <bt:ShortStrings>
         <bt:String id="Contoso.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
         <bt:String id="Contoso.Group1Label" DefaultValue="Commands Group" />
         <bt:String id="Contoso.GetStarted.Title" DefaultValue="Get started with your sample add-in!" />
       </bt:ShortStrings>
-      <!-- Максимальное число символов в длинной строке — 250. -->
+      <!-- LongStrings max characters==250. -->
       <bt:LongStrings>
         <bt:String id="Contoso.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
         <bt:String id="Contoso.GetStarted.Description" DefaultValue="Your sample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started." />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
-  <!-- Конец интеграции для режима команд надстройки. -->
+  <!-- End Add-in Commands Mode integration. -->
 
 </OfficeApp>
