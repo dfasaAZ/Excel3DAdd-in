@@ -23,14 +23,13 @@
                 return;
             }
 
-            $("#template-description").text("This sample highlights the highest value from the cells you have selected in the spreadsheet.");
-            $('#button-text').text("Highlight!");
-            $('#button-desc').text("Highlights the largest number.");
+            $("#template-description").text("Select range with three columns and press \"Build\" button");
+            $('#button-text').text("Build!");
+            $('#button-desc').text("Build new graph");
                 
             loadSampleData();
-
             // Add a click event handler for the highlight button.
-            $('#highlight-button').click(hightlightHighestValue);
+            $('#highlight-button').click(createNewGraph);
         });
     };
     function loadSampleData() {
@@ -62,7 +61,7 @@
 
             // Populate the table with spiral data
             table.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
-            table.rows.add(null, spiralData); // Set the data rows
+            table.rows.add(null, spiralData); // Set the data rows (SpiralData)
 
 
             // Sync the changes to Excel
@@ -70,26 +69,43 @@
         })
             .catch(errorHandler);
     }
-    function convert3Dto2D(range) {
-        const p1 = -0.35;
-        const p2 = -0.35;
-        const q1 = 1;
-        const q2 = 0;
-        const r2 = 1;
 
-        return Excel.run(async (context) => {
-            const sheet = context.workbook.worksheets.getActiveWorksheet();
-            const values = range.values;
-            const convertedValues = [];
+    function createNewGraph() {
+        
+        Excel.run(async (context) => {
+            var sourceRange = context.workbook.getSelectedRange().load("values, rowCount, columnCount");
+            var activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
+            return context.sync().then(function () {
+                const values = sourceRange.values;
+                const _2dValues = convert3DTo2D(values);
+                //Creating new sheet for graph
+                const graphSheet = context.workbook.worksheets.add("Graph");
 
-            for (const [x, y, z] of values) {
-                const x2d = p1 * x + q1 * y + r2 * z;
-                const y2d = p2 * x + q2 * y + r2 * z;
-                convertedValues.push([x2d, y2d]);
-            }
+                const table = graphSheet.tables.add("A1:B1", true); // Create a new table with headers
+                table.name = "GraphData"; // Set the table name
+               
+                table.getHeaderRowRange().values = [["X", "Y"]]; // Set the header row
+                table.rows.add(null, _2dValues); // Set the data rows
 
-            await context.sync();
-            return convertedValues;
+                const chart = context.workbook.worksheets.getActiveWorksheet().charts.add(
+                    "XYScatterSmooth",//XYScatterSmoothNoMarkers or XYScatterSmooth
+                    table.getRange(),//Range of table generated from source points
+                    "Auto",
+                );
+                //Turn off default elements
+                chart.axes.valueAxis.majorGridlines.visible = false;
+                chart.axes.categoryAxis.majorGridlines.visible = false;
+                chart.axes.valueAxis.visible = false;
+                chart.axes.categoryAxis.visible = false;
+
+                // Set chart title
+                chart.title.text = "3D Chart";
+
+                showNotification("Operation complete", "Succesfully built chart at " + activeSheetData.name);
+                return context.sync()
+                
+            }).then(context.sync);
+           
         }).catch(errorHandler);
     }
   
@@ -128,7 +144,7 @@
                 })
                 .then(ctx.sync);
         })
-        .catch(errorHandler);
+            .catch(errorHandler);
     }
 
     function displaySelectedCells() {
@@ -142,7 +158,7 @@
             });
     }
 
-    // Helper function for treating errors
+   //  Helper function for treating errors
     function errorHandler(error) {
         // Always be sure to catch any accumulated errors that bubble up from the Excel.run execution
         showNotification("Error", error);
@@ -159,4 +175,26 @@
         messageBanner.showBanner();
         messageBanner.toggleExpansion();
     }
+
+    /**
+   * Converts array of points [x,y,z] to it's 2d visualization
+   * 
+   * @param values initial array
+   * @returns array of [x,y] coordinates
+   */
+    function convert3DTo2D(values) {
+        const convertedValues = [];
+        const p1 = -0.35;
+        const p2 = -0.35;
+        const q1 = 1;
+        const q2 = 0;
+        const r2 = 1;
+        for (const [x, y, z] of values) {
+            const x2d = p1 * x + q1 * y + r2 * z;
+            const y2d = p2 * x + q2 * y + r2 * z;
+            convertedValues.push([x2d, y2d]);
+        }
+        return convertedValues
+    }
+
 })();
