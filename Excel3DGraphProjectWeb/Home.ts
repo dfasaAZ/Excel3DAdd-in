@@ -6,8 +6,12 @@
 
     // The initialize function must be run each time a new page is loaded.
     Office.initialize = function (reason) {
+      
+    
         (window as any).Promise = OfficeExtension.Promise;
+        loadSampleData();
         $(document).ready(function () {
+            
             // Initialize the notification mechanism and hide it
             var element = document.querySelector('.MessageBanner');
             messageBanner = new components.MessageBanner(element);
@@ -27,11 +31,18 @@
             $('#button-text').text("Build!");
             $('#button-desc').text("Build new graph");
                 
-            loadSampleData();
+            
             // Add a click event handler for the highlight button.
             $('#highlight-button').click(createNewGraph);
         });
     };
+
+    Office.onReady(async () => {
+
+        await Excel.run(async (context) => {
+        }).catch(errorHandler);
+     
+    });
     function loadSampleData() {
         // Define spiral parameters
         const numPoints = 100; // Number of points in the spiral
@@ -53,11 +64,11 @@
 
         // Run the Excel operations
         Excel.run(function (context) {
+           
             // Create a new table on the active sheet
             const sheet = context.workbook.worksheets.getActiveWorksheet();
             const table = sheet.tables.add("A1:C1", true); // Create a new table with headers
             table.name = "SpiralData"; // Set the table name
-
 
             // Populate the table with spiral data
             table.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
@@ -70,6 +81,19 @@
             .catch(errorHandler);
     }
 
+    async function handleSelectionChanged(event) {
+        await Excel.run(async (context) => {
+            let selectedGraph;
+            selectedGraph = context.workbook.getActiveChart().load("name");
+            await context.sync().then(function processSelectedGraphs() {
+                    $('#graphName').text(selectedGraph.name);
+                });
+
+            
+            
+        });
+    }
+    
     function createNewGraph() {
         
         Excel.run(async (context) => {
@@ -97,7 +121,7 @@
                 chart.axes.categoryAxis.majorGridlines.visible = false;
                 chart.axes.valueAxis.visible = false;
                 chart.axes.categoryAxis.visible = false;
-
+                chart.onActivated.add(handleSelectionChanged);
                 // Set chart title
                 chart.title.text = "3D Chart";
 
@@ -198,3 +222,5 @@
     }
 
 })();
+
+
