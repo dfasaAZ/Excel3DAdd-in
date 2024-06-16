@@ -105,15 +105,37 @@
                 //Creating new sheet for graph
                 const graphSheet = context.workbook.worksheets.add("Graph");
 
-                const table = graphSheet.tables.add("A1:B1", true); // Create a new table with headers
-                table.name = "GraphData"; // Set the table name
+                // Create a new table for coefficients values
+                const p1 = -0.35;
+                const p2 = -0.35;
+                const q1 = 1;
+                const q2 = 0;
+                const r2 = 1;
+                const coeff = [[p1, p2, q1, q2, r2]];
+                const coeffTable = graphSheet.tables.add("H1:L1", true);
+                coeffTable.name = "coefficients"; // Set the table name
+
+                coeffTable.getHeaderRowRange().values = [["p1", "p2", "q1", "q2", "r2"]]; // Set the header row
+                coeffTable.rows.add(null, coeff); // Set the data rows
+
+                // Create a new table for source values
+                const sourceTable = graphSheet.tables.add("A1:C1", true);
+                sourceTable.name = "SourceData"; // Set the table name
+
+                sourceTable.getHeaderRowRange().values = [["X", "Y","Z"]]; // Set the header row
+                sourceTable.rows.add(null, values); // Set the data rows
+
+
+                // Create a new table for converted values
+                const _2dTable = graphSheet.tables.add("E1:F1", true); 
+                _2dTable.name = "GraphData"; // Set the table name
                
-                table.getHeaderRowRange().values = [["X", "Y"]]; // Set the header row
-                table.rows.add(null, _2dValues); // Set the data rows
+                _2dTable.getHeaderRowRange().values = [["X", "Y"]]; // Set the header row
+                _2dTable.rows.add(null, _2dValues); // Set the data rows
 
                 const chart = context.workbook.worksheets.getActiveWorksheet().charts.add(
                     "XYScatterSmooth",//XYScatterSmoothNoMarkers or XYScatterSmooth
-                    table.getRange(),//Range of table generated from source points
+                    _2dTable.getRange(),//Range of table generated from source points
                     "Auto",
                 );
                 //Turn off default elements
@@ -131,44 +153,6 @@
             }).then(context.sync);
            
         }).catch(errorHandler);
-    }
-  
-
-    function hightlightHighestValue() {
-        // Run a batch operation against the Excel object model
-        Excel.run(function (ctx) {
-            // Create a proxy object for the selected range and load its properties
-            var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
-
-            // Run the queued-up command, and return a promise to indicate task completion
-            return ctx.sync()
-                .then(function () {
-                    var highestRow = 0;
-                    var highestCol = 0;
-                    var highestValue = sourceRange.values[0][0];
-
-                    // Find the cell to highlight
-                    for (var i = 0; i < sourceRange.rowCount; i++) {
-                        for (var j = 0; j < sourceRange.columnCount; j++) {
-                            if (!isNaN(sourceRange.values[i][j]) && sourceRange.values[i][j] > highestValue) {
-                                highestRow = i;
-                                highestCol = j;
-                                highestValue = sourceRange.values[i][j];
-                            }
-                        }
-                    }
-
-                    cellToHighlight = sourceRange.getCell(highestRow, highestCol);
-                    sourceRange.worksheet.getUsedRange().format.fill.clear();
-                    sourceRange.worksheet.getUsedRange().format.font.bold = false;
-
-                    // Highlight the cell
-                    cellToHighlight.format.fill.color = "orange";
-                    cellToHighlight.format.font.bold = true;
-                })
-                .then(ctx.sync);
-        })
-            .catch(errorHandler);
     }
 
     function displaySelectedCells() {
@@ -208,14 +192,9 @@
    */
     function convert3DTo2D(values) {
         const convertedValues = [];
-        const p1 = -0.35;
-        const p2 = -0.35;
-        const q1 = 1;
-        const q2 = 0;
-        const r2 = 1;
         for (const [x, y, z] of values) {
-            const x2d = p1 * x + q1 * y + r2 * z;
-            const y2d = p2 * x + q2 * y + r2 * z;
+            const x2d = "=SourceData[@X]*coefficients[p1]+coefficients[q1]*SourceData[@Y]+coefficients[r2]*SourceData[@Z]";
+            const y2d = "=SourceData[@X]*coefficients[p2]+coefficients[q2]*SourceData[@Y]+coefficients[r2]*SourceData[@Z]";
             convertedValues.push([x2d, y2d]);
         }
         return convertedValues
