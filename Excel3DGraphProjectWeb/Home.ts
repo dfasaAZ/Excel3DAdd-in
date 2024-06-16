@@ -30,10 +30,18 @@
             $("#template-description").text("Select range with three columns and press \"Build\" button");
             $('#button-text').text("Build!");
             $('#button-desc').text("Build new graph");
-                
-            
-            // Add a click event handler for the highlight button.
+            // Add a click event handler for the button.
             $('#highlight-button').click(createNewGraph);
+
+            $('#sliderX').on('change', function () {
+                rotate('X');
+            });
+            $('#sliderY').on('change', function () {
+                rotate('Y');
+            });
+            $('#sliderZ').on('change', function () {
+                rotate('Z');
+            });
         });
     };
 
@@ -43,6 +51,36 @@
         }).catch(errorHandler);
      
     });
+    /**
+     * 
+     * @param axis [x,y,z]
+     */
+    function rotate(axis: string): void {
+        const graphId = document.getElementById("graphName").textContent;
+        //Have to cast types because of typescript limitations
+        const value = (<HTMLInputElement>document.getElementById("slider" + axis)).value;
+
+        Excel.run(function (context) {
+
+            // Create a new table on the active sheet
+            const sheet = context.workbook.worksheets.getItem("Graph" + graphId);
+            const table = sheet.tables.getItem("Angles" + graphId);
+            switch (axis) {
+                case 'X': table.columns.getItem("X").getDataBodyRange().values = [[parseFloat(value)]];
+                    break;
+                case 'Y': table.columns.getItem("Y").getDataBodyRange().values = [[parseFloat(value)]];
+                    break;
+                case 'Z': table.columns.getItem("Z").getDataBodyRange().values = [[parseFloat(value)]];
+                    break;
+                default: throw new Error("Something bad happened\nNo such axis");
+            }
+
+            // Sync the changes to Excel
+            return context.sync();
+        })
+            .catch(errorHandler);
+        
+    }
     function loadSampleData() {
         // Define spiral parameters
         const numPoints = 100; // Number of points in the spiral
@@ -100,27 +138,48 @@
             var sourceRange = context.workbook.getSelectedRange().load("values, rowCount, columnCount");
             var activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
             return context.sync().then(function () {
+                //Unique graph related code, use it to name every object related to one particular graph
+                const id = "_"+window.crypto.randomUUID().substring(0,5);
                 const values = sourceRange.values;
-                const _2dValues = convert3DTo2D(values);
+                const _2dValues = convert3DTo2D(values,id);
                 //Creating new sheet for graph
-                const graphSheet = context.workbook.worksheets.add("Graph");
+                const graphSheet = context.workbook.worksheets.add("Graph" + id);
 
+                // Create a new table for angles values
+                const angleTable = graphSheet.tables.add("O1:Q1", true);
+                angleTable.name = "Angles" + id; // Set the table name
+
+                angleTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
+                angleTable.rows.add(null, [[45,45,0]]); // Set the data rows
+
+                // Create a new table for angles in radians
+                const angleRadTable = graphSheet.tables.add("S1:U1", true);
+                angleRadTable.name = "AnglesRad" + id; // Set the table name
+
+                angleRadTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
+                angleRadTable.rows.add(null, [[
+                    `=(6.28/360)*${angleTable.name}[X]`,
+                    `=(6.28/360)*${angleTable.name}[Y]`,
+                    `=(6.28/360)*${angleTable.name}[Z]`
+                ]]); // Set the data rows
                 // Create a new table for coefficients values
-                const p1 = -0.35;
-                const p2 = -0.35;
-                const q1 = 1;
-                const q2 = 0;
-                const r2 = 1;
-                const coeff = [[p1, p2, q1, q2, r2]];
-                const coeffTable = graphSheet.tables.add("H1:L1", true);
-                coeffTable.name = "coefficients"; // Set the table name
+                const coeff = [[
+                    `=-COS(${angleRadTable.name}[Y])*COS(${angleRadTable.name}[Z])`,
+                    `=COS(${angleRadTable.name}[Z])*-SIN(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])+SIN(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[X])`,
+                    `=SIN(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[Y])`,
+                    `=-SIN(${angleRadTable.name}[Z])*-SIN(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])+COS(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[X])`,
+                    `=-SIN(${angleRadTable.name}[Y])`,
+                    `=COS(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])`,
+                ]];
+                const coeffTable = graphSheet.tables.add("H1:M1", true);
+                coeffTable.name = "coefficients"+id; // Set the table name
 
-                coeffTable.getHeaderRowRange().values = [["p1", "p2", "q1", "q2", "r2"]]; // Set the header row
+                coeffTable.getHeaderRowRange().values = [["p1", "p2", "q1", "q2", "r1", "r2"]]; // Set the header row
                 coeffTable.rows.add(null, coeff); // Set the data rows
 
                 // Create a new table for source values
                 const sourceTable = graphSheet.tables.add("A1:C1", true);
-                sourceTable.name = "SourceData"; // Set the table name
+                sourceTable.name = "SourceData"+id; // Set the table name
 
                 sourceTable.getHeaderRowRange().values = [["X", "Y","Z"]]; // Set the header row
                 sourceTable.rows.add(null, values); // Set the data rows
@@ -128,7 +187,7 @@
 
                 // Create a new table for converted values
                 const _2dTable = graphSheet.tables.add("E1:F1", true); 
-                _2dTable.name = "GraphData"; // Set the table name
+                _2dTable.name = "GraphData"+id; // Set the table name
                
                 _2dTable.getHeaderRowRange().values = [["X", "Y"]]; // Set the header row
                 _2dTable.rows.add(null, _2dValues); // Set the data rows
@@ -146,6 +205,7 @@
                 chart.onActivated.add(handleSelectionChanged);
                 // Set chart title
                 chart.title.text = "3D Chart";
+                chart.name = id
 
                 showNotification("Operation complete", "Succesfully built chart at " + activeSheetData.name);
                 return context.sync()
@@ -190,16 +250,18 @@
    * @param values initial array
    * @returns array of [x,y] coordinates
    */
-    function convert3DTo2D(values) {
+    function convert3DTo2D(values,id) {
         const convertedValues = [];
         for (const [x, y, z] of values) {
-            const x2d = "=SourceData[@X]*coefficients[p1]+coefficients[q1]*SourceData[@Y]+coefficients[r2]*SourceData[@Z]";
-            const y2d = "=SourceData[@X]*coefficients[p2]+coefficients[q2]*SourceData[@Y]+coefficients[r2]*SourceData[@Z]";
+            const x2d = "=SourceData" + id + "[@X]*coefficients" + id + "[p1]+coefficients" + id + "[q1]*SourceData" + id + "[@Y]+coefficients" + id + "[r2]*SourceData" + id +"[@Z]";
+            const y2d = "=SourceData" + id + "[@X]*coefficients" + id + "[p2]+coefficients" + id + "[q2]*SourceData" + id + "[@Y]+coefficients" + id + "[r2]*SourceData" + id +"[@Z]";
             convertedValues.push([x2d, y2d]);
         }
         return convertedValues
     }
 
 })();
+
+
 
 
