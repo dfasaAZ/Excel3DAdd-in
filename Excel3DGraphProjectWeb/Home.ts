@@ -129,15 +129,20 @@
                 $('#graphName').text(selectedGraph.name);
                 graphName = selectedGraph.name;
             });
+            // Loading graph related properties
             graphAngles = context.workbook.tables.getItem("Angles" + graphName).rows.getItemAt(0).load("values");
             await context.sync().then(function processSelectedGraphs() {
                angles = graphAngles.values;
              
             });
         });
+        //Updating sliders
         const sliderXElement = document.getElementById("sliderX") as HTMLInputElement;
-        
+        const sliderYElement = document.getElementById("sliderY") as HTMLInputElement;
+        const sliderZElement = document.getElementById("sliderZ") as HTMLInputElement;
         sliderXElement.value = angles[0][0];
+        sliderYElement.value = angles[0][1];
+        sliderZElement.value = angles[0][2];
     }
     
     function createNewGraph() {
