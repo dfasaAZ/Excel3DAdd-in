@@ -107,7 +107,6 @@
             const sheet = context.workbook.worksheets.getActiveWorksheet();
             const table = sheet.tables.add("A1:C1", true); // Create a new table with headers
             table.name = "SpiralData"; // Set the table name
-
             // Populate the table with spiral data
             table.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
             table.rows.add(null, spiralData); // Set the data rows (SpiralData)
@@ -120,16 +119,25 @@
     }
 
     async function handleSelectionChanged(event) {
+        let angles;
         await Excel.run(async (context) => {
             let selectedGraph;
+            let graphName;
+            let graphAngles;
             selectedGraph = context.workbook.getActiveChart().load("name");
             await context.sync().then(function processSelectedGraphs() {
-                    $('#graphName').text(selectedGraph.name);
-                });
-
-            
-            
+                $('#graphName').text(selectedGraph.name);
+                graphName = selectedGraph.name;
+            });
+            graphAngles = context.workbook.tables.getItem("Angles" + graphName).rows.getItemAt(0).load("values");
+            await context.sync().then(function processSelectedGraphs() {
+               angles = graphAngles.values;
+             
+            });
         });
+        const sliderXElement = document.getElementById("sliderX") as HTMLInputElement;
+        
+        sliderXElement.value = angles[0][0];
     }
     
     function createNewGraph() {
@@ -150,7 +158,7 @@
                 angleTable.name = "Angles" + id; // Set the table name
 
                 angleTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
-                angleTable.rows.add(null, [[45,45,0]]); // Set the data rows
+                angleTable.rows.add(null, [[255,1,50]]); // Set the data rows
 
                 // Create a new table for angles in radians
                 const angleRadTable = graphSheet.tables.add("S1:U1", true);
