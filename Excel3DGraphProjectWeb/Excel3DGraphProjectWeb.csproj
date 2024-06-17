@@ -118,6 +118,8 @@
     <Content Include="Images\Button32x32.png" />
     <Content Include="Images\Button80x80.png" />
     <Content Include="Images\Close.png" />
+    <Content Include="Quasi\Quasi.html" />
+    <TypeScriptCompile Include="Quasi\Quasi.ts" />
     <Content Include="Scripts\jquery-3.6.0.js" />
     <Content Include="Scripts\jquery-3.6.0.min.js" />
     <Content Include="Scripts\jquery-3.6.0.slim.js" />

@@ -82,6 +82,7 @@
         
     }
     function loadSampleData() {
+
         // Define spiral parameters
         const numPoints = 100; // Number of points in the spiral
         const radius = 10; // Initial radius of the spiral
@@ -146,7 +147,6 @@
     }
     
     function createNewGraph() {
-        
         Excel.run(async (context) => {
             var sourceRange = context.workbook.getSelectedRange().load("values, rowCount, columnCount");
             var activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
@@ -272,7 +272,7 @@
         }
         return convertedValues
     }
-
+   
 })();
 
 
