@@ -26,22 +26,65 @@
                 $('#highlight-button').click(displaySelectedCells);
                 return;
             }
+            $('#color-button').on('click', function () {
+                findQuasi();
+            });
+            $('#frequency-button').on('click', function () {
+                buildFrequency();
+            });
+            $('#centers-button').on('click', function () {
+                buildCenters();
+            });
         });
     };
 
+    /**
+     * Находит квазициклы у выделенного графика, вызывает функцию для его раскраски
+     * 
+     * Наносит на лист с метаданными частоты квазициклов
+     */
+    function findQuasi() {
+        /*
+        Взять из инпута погрешность
+        Вызвать функцию поиска
+        Найти частоты
+        Записать в ячейки на листе метаданных
+        Найти центры
+        Записать в таблицу centers+${id}
+        */
+        let epsilon = (<HTMLInputElement>document.getElementById("epsilon")).value;
+        processQuasiCycles(epsilon);
+
+    }
+    function buildFrequency() {
+        /*
+        Найти на листе с метаданными ячейки 
+        Если они пустые - вызвать showNotification
+        Если нет, построить гистограмму
+        */
+
+    }
+    function buildCenters() {
+        /*
+       Найти на листе с метаданными таблицу centers+${id} 
+       Если её нет - вызвать showNotification
+       Если есть, построить полноценный 3d график
+       */
+
+    }
     Office.onReady(async () => {
 
         await Excel.run(async (context) => {
         }).catch(errorHandler);
 
     });
-    function loadSampleData() {
+  async  function loadSampleData() {
 
 
         //TODO: Проверка алгоритмов квазицикла, убрать потом
         quasiTest();
 
-       
+        await loadSettings();
 
         // Run the Excel operations
         Excel.run(function (context) {
@@ -54,7 +97,7 @@
             .catch(errorHandler);
     }
 
-    async function handleSelectionChanged(event) {
+    async function loadSettings() {
         let angles;
         await Excel.run(async (context) => {
             let selectedGraph;
@@ -62,8 +105,14 @@
             let graphAngles;
             selectedGraph = context.workbook.getActiveChart().load("name");
             await context.sync().then(function processSelectedGraphs() {
-                $('#graphName').text(selectedGraph.name);
-                graphName = selectedGraph.name;
+                let name = selectedGraph.name;
+                if (name != null) {
+                    $('#graphName').text("Работа с графиком id" + name);
+                    $('#graphId').text(name);
+                    graphName = name;
+                    $('#pageContent').show();
+                }
+                
             });
             // Loading graph related properties
             graphAngles = context.workbook.tables.getItem("Angles" + graphName).rows.getItemAt(0).load("values");
@@ -74,23 +123,97 @@
         });
     }
 
-    function processQuasiCycles() {
-        let graphName;// получить с html, загружать как и в home
-        let graphAngles;
-        Excel.run(async (context) => {
+   async function processQuasiCycles(epsilon) {
+        let graphName = document.getElementById('graphId').innerText;// получить с html, загружать как и в home
+        let graphData;
+       let result;
+      
+        await Excel.run(async (context) => {
+           
             // Loading graph related properties
-            graphAngles = context.workbook.tables.getItem("SourceData" + graphName).rows.load("items");
+            graphData = context.workbook.tables.getItem("SourceData" + graphName).rows.load("items");
             return context.sync().then(function () {
 
                 //Здесь пройтись по строкам и запихать их в квазициклы
+                const points = graphData.items.map(row => {
+                    return [
+                        row.values[0][0], 
+                        row.values[0][1], 
+                        row.values[0][2] 
+                    ];
+                });
+               result = findMaximumNonIntersectingArrays(findQuasiCycles(points, epsilon));// Массив квазициклов
+                
+                console.log("Quasi-cycles result:", result);
+               
 
                 return context.sync()
 
             }).then(context.sync);
 
         }).catch(errorHandler);
+       colorQuasiCyclesInChart(graphName, result);
+    }
+    function colorQuasiCyclesInChart(id, quasiCycles) {
+        return Excel.run(async (context) => {
+            let charts = context.workbook.worksheets.getActiveWorksheet().load("charts");
+            await context.sync();
+            let pointsLoad = charts.charts.getItem(id).series.getItemAt(0).points.load("items");
+            // Set color for chart point.
+            await context.sync();
+            let points = pointsLoad;
+            const colors = generateColors(quasiCycles.length);
+            // Color each quasi-cycle
+            quasiCycles.forEach((cycle, index) => {
+                const color = colors[index];
+                cycle.indices.forEach(pointIndex => {
+                    // Excel uses 1-based indexing for points
+                    const point = points.items[pointIndex];
+                    point.set({ markerForegroundColor: color, markerBackgroundColor: color });
+                });
+            });
+
+            await context.sync();
+        });
     }
 
+    // Helper function to generate distinct colors
+    function generateColors(count) {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+            // Use HSL color space for even distribution, then convert to HEX
+            const hue = (i * 137.508) % 360; // Use golden angle approximation
+            const saturation = 70; // Fixed saturation for vibrant colors
+            const lightness = 50; // Fixed lightness for medium brightness
+
+            // Convert HSL to RGB
+            const chroma = (1 - Math.abs(2 * lightness / 100 - 1)) * saturation / 100;
+            const huePrime = hue / 60;
+            const x = chroma * (1 - Math.abs((huePrime % 2) - 1));
+            let r, g, b;
+
+            if (huePrime >= 0 && huePrime < 1) { [r, g, b] = [chroma, x, 0]; }
+            else if (huePrime >= 1 && huePrime < 2) { [r, g, b] = [x, chroma, 0]; }
+            else if (huePrime >= 2 && huePrime < 3) { [r, g, b] = [0, chroma, x]; }
+            else if (huePrime >= 3 && huePrime < 4) { [r, g, b] = [0, x, chroma]; }
+            else if (huePrime >= 4 && huePrime < 5) { [r, g, b] = [x, 0, chroma]; }
+            else { [r, g, b] = [chroma, 0, x]; }
+
+            const m = lightness / 100 - chroma / 2;
+            r = Math.round((r + m) * 255);
+            g = Math.round((g + m) * 255);
+            b = Math.round((b + m) * 255);
+
+            // Convert RGB to HEX
+            const hex = '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+
+            colors.push(hex);
+        }
+        return colors;
+    }
     function displaySelectedCells() {
         Office.context.document.getSelectedDataAsync(Office.CoercionType.Text,
             function (result) {
@@ -204,6 +327,10 @@
         console.log(result);
 
     }
+
+   
+
+
 })();
 
 

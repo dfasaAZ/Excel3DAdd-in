@@ -7,9 +7,10 @@
     // The initialize function must be run each time a new page is loaded.
     Office.initialize = function (reason) {
       
-    
+  
         (window as any).Promise = OfficeExtension.Promise;
         loadSampleData();
+        handleSelectionChanged(null);
         $(document).ready(function () {
             
             // Initialize the notification mechanism and hide it
@@ -31,8 +32,8 @@
             $('#button-text').text("Build!");
             $('#button-desc').text("Build new graph");
             // Add a click event handler for the button.
+            // $('#highlight-button').click(createNewGraph);
             $('#highlight-button').click(createNewGraph);
-
             $('#sliderX').on('change', function () {
                 rotate('X');
             });
@@ -82,7 +83,6 @@
         
     }
     function loadSampleData() {
-
         // Define spiral parameters
         const numPoints = 100; // Number of points in the spiral
         const radius = 10; // Initial radius of the spiral
@@ -145,11 +145,12 @@
         sliderYElement.value = angles[0][1];
         sliderZElement.value = angles[0][2];
     }
-    
-    function createNewGraph() {
-        Excel.run(async (context) => {
+
+    async function createNewGraph() {
+        var activeSheetData;
+       await Excel.run(async (context) => {
             var sourceRange = context.workbook.getSelectedRange().load("values, rowCount, columnCount");
-            var activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
+            activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
             return context.sync().then(function () {
                 //Unique graph related code, use it to name every object related to one particular graph
                 const id = "_"+window.crypto.randomUUID().substring(0,5);
@@ -208,7 +209,7 @@
                 const chart = context.workbook.worksheets.getActiveWorksheet().charts.add(
                     "XYScatterSmooth",//XYScatterSmoothNoMarkers or XYScatterSmooth
                     _2dTable.getRange(),//Range of table generated from source points
-                    "Auto",
+                    Excel.ChartSeriesBy.columns
                 );
                 //Turn off default elements
                 chart.axes.valueAxis.majorGridlines.visible = false;
@@ -220,12 +221,14 @@
                 chart.title.text = "3D Chart";
                 chart.name = id
 
-                showNotification("Operation complete", "Succesfully built chart at " + activeSheetData.name);
+               
                 return context.sync()
                 
             }).then(context.sync);
            
-        }).catch(errorHandler);
+       }).catch(errorHandler);
+        handleSelectionChanged(null);
+        showNotification("Operation complete", "Succesfully built chart at " + activeSheetData.name);
     }
 
     function displaySelectedCells() {
@@ -272,7 +275,10 @@
         }
         return convertedValues
     }
-   
+
+
+
+    
 })();
 
 

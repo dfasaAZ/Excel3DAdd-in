@@ -24,15 +24,28 @@
     <link rel="stylesheet" href="../Content/fabric.min.css">
 </head>
 <body>
+    <a href="../Home.html" class="ms-Icon--Back"></a>
     <!-- Grid Settings -->
     <div class="ms-BorderBox ms-BorderBox--large">
-        <div class="ms-font-xl ms-fontWeight-semibold ms-BorderBox-header">Настройки сетки</div>
-        <div class="ms-BorderBox-body">
-            <!-- Grid Toggle -->
-            <div class="ms-Toggle">
-                <span class="ms-Label ms-Toggle-description">Показать сетку</span>
-                <input type="checkbox" id="gridToggle" class="ms-Toggle-input">
-                <label for="gridToggle" class="ms-Toggle-field"></label>
+        <div class="ms-font-xl ms-fontWeight-semibold ms-BorderBox-header" id="graphName">Не выбран график</div><div id="graphId" hidden="hidden"></div>
+        <div id="pageContent" hidden="hidden">
+            <div class="ms-BorderBox-body">
+                <input id="epsilon" type="number" step="0.1" min="0.1" placeholder="Введите допустимую окрестность">
+                <button class="Button Button--primary" id="color-button">
+                    <span class="Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
+                    <span class="Button-label" id="button-text">Выделить квазициклы</span>
+                    <span class="Button-description" id="button-desc"></span>
+                </button>
+                <button class="Button Button--primary" id="frequency-button">
+                    <span class="Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
+                    <span class="Button-label" id="button-text">Построить гистограмму частот</span>
+                    <span class="Button-description" id="button-desc"></span>
+                </button>
+                <button class="Button Button--primary" id="centers-button">
+                    <span class="Button-icon"><i class="ms-Icon ms-Icon--plus"></i></span>
+                    <span class="Button-label" id="button-text">Движение центров</span>
+                    <span class="Button-description" id="button-desc">построение графика движения центров габаритных параллелепипедов</span>
+                </button>
             </div>
         </div>
     </div>
