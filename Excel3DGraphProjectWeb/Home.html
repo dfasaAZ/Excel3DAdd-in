@@ -22,29 +22,60 @@
     <!--<link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.0/css/fabric.min.css">-->
     <!-- To enable the offline use of Office UI Fabric Core, use: -->
     <link rel="stylesheet" href="Content/fabric.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #content-main {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .ms-Grid {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 10px;
+            overflow: auto;
+        }
+        .ms-Grid::before{
+            display:none;
+        }
+
+        .ms-BorderBox {
+            margin-bottom: 10px;
+        }
+        .ms-Slider {
+            width: 100%;
+
+        }
+        #highlight-button {
+            margin-top: 10px;
+            align-self: center;
+        }
+        #notification-popup {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 15%;
+            overflow: hidden;
+        }
+    </style>
 </head>
 
     <!-- Office UI Fabric JS and it's components are no longer actively supported. Please see https://aka.ms/PnP-OfficeFabricReact for recommended Patterns and Practices -->
     <!-- <link rel="stylesheet" href="https://appsforoffice.microsoft.com/fabric/2.1.0/fabric.components.min.css"> -->
 
 <body class="ms-Fabric" dir="ltr">
-    <style>
-       
-        #content-main {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            grid-gap: 20px;
-            height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .left-column{
-            grid-column:1;
-        }
-        .right-column{
-            grid-column:2;
-        }
-    </style>
+    
     <div id="content-main">
 
         <div class="ms-Grid" style="display:grid">
@@ -52,7 +83,7 @@
             <div class="ms-BorderBox ms-BorderBox--large ">
                 <div class="ms-font-xl ms-fontWeight-semibold ms-BorderBox-header left-column" style="justify-content:left;">Информация о графике</div>
                 <div class="ms-BorderBox-body right-column">
-                    id Графика: 
+                    id Графика:
                     <div class="ms-fontColor-info ms-fontWeight-semibold" id="graphName"></div>
                 </div>
             </div>
@@ -89,6 +120,12 @@
                     </div>
                 </div>
             </div>
+            <div class="ms-BorderBox ms-BorderBox--large">
+                <div class="ms-font-xl ms-fontWeight-semibold ms-BorderBox-header">Работа с фазовым портретом</div>
+                <div class="ms-BorderBox-body">
+                    <a href="Quasi/Quasi.html">click me!</a>
+                </div>
+            </div>
         </div>
         <!--default-->
         <button class="Button Button--primary" id="highlight-button">
@@ -97,15 +134,8 @@
             <span class="Button-description" id="button-desc"></span>
         </button>
     </div>
-    </div>
-    <div class="footer">
-        <div class="ms-Grid ms-bgColor-themeSecondary">
-            <div class="ms-Grid-row">
-                <div class="ms-Grid-col ms-u-sm12 ms-u-md12 ms-u-lg12"> <div class="ms-font-xl ms-fontColor-white">Contoso</div></div>
-            </div>
-        </div>
-    </div>
-    <a href="Quasi/Quasi.html">click me!</a>
+    
+    
     <!-- Component used for displaying notifications -->
     <div class="MessageBanner" id="notification-popup">
         <div class="MessageBanner-content">

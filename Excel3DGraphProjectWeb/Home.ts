@@ -28,9 +28,9 @@
                 return;
             }
 
-            $("#template-description").text("Select range with three columns and press \"Build\" button");
-            $('#button-text').text("Build!");
-            $('#button-desc').text("Build new graph");
+            $("#template-description").text("Выберите диапазон с тремя столбцами и нажмите кнопку \"Построить\"");
+            $('#button-text').text("Построить!");
+            $('#button-desc').text("Построить новый график");
             // Add a click event handler for the button.
             // $('#highlight-button').click(createNewGraph);
             $('#highlight-button').click(createNewGraph);
@@ -228,7 +228,7 @@
            
        }).catch(errorHandler);
         handleSelectionChanged(null);
-        showNotification("Operation complete", "Succesfully built chart at " + activeSheetData.name);
+        showNotification("Операция завершена", "Успешно построен график на листе " + activeSheetData.name);
     }
 
     function displaySelectedCells() {
