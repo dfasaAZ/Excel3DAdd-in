@@ -45,23 +45,68 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
      * Наносит на лист с метаданными частоты квазициклов
      */
     function findQuasi() {
-        /*
-        Взять из инпута погрешность
-        Вызвать функцию поиска
-        Найти частоты
-        Записать в ячейки на листе метаданных
-        Найти центры
-        Записать в таблицу centers+${id}
-        */
-        let epsilon = document.getElementById("epsilon").value;
-        processQuasiCycles(epsilon);
+        return __awaiter(this, void 0, void 0, function* () {
+            /*
+            Взять из инпута погрешность
+            Вызвать функцию поиска
+            Найти частоты
+            Записать в ячейки на листе метаданных
+            Найти центры
+            Записать в таблицу centers+${id}
+            */
+            let epsilon = document.getElementById("epsilon").value;
+            yield processQuasiCycles(epsilon).then((result) => {
+                findFrequency(result);
+                findCenters(result);
+            });
+        });
     }
     function buildFrequency() {
         /*
-        Найти на листе с метаданными ячейки
-        Если они пустые - вызвать showNotification
-        Если нет, построить гистограмму
-        */
+       Найти на листе с метаданными таблицу
+       Если её нет - вызвать showNotification
+       Если есть, построить гистограмму
+       */
+        Excel.run((context) => __awaiter(this, void 0, void 0, function* () {
+            let graphName = document.getElementById('graphId').innerText;
+            let sheetName = `Graph${graphName}`;
+            let tableName = `Frequencies${graphName}`;
+            // Get the active sheet
+            let sheet = context.workbook.worksheets.getItem(sheetName);
+            // Check if the table exists
+            let tables = sheet.tables;
+            tables.load("items/name");
+            yield context.sync();
+            let table = tables.items.find(t => t.name === tableName);
+            if (!table) {
+                showNotification("Отсутствуют данные", `Выполните поиск квазициклов перед постоением графика частот`);
+                return;
+            }
+            let dataRange = table.getDataBodyRange();
+            dataRange.load("values");
+            yield context.sync();
+            let data = dataRange.values[0];
+            let chartRange = context.workbook.worksheets.getActiveWorksheet().getRange("L11:U26");
+            let chart = context.workbook.worksheets.getActiveWorksheet().charts.add("ColumnClustered", chartRange, "Rows");
+            chart.title.text = "график частот";
+            chart.name = "Frequency " + graphName;
+            chart.legend.visible = false;
+            chart.categoryLabelLevel = -1;
+            chart.dataLabels.showValue = true;
+            chart.dataLabels.showSeriesName = true;
+            chart.dataLabels.separator = "\nколво:\n";
+            chart.setData(table.getRange());
+            let maxValue = Math.max(...data);
+            let maxIndex = data.indexOf(maxValue);
+            let pointsCollection = chart.series.getItemAt(maxIndex).points;
+            let point = pointsCollection.getItemAt(0);
+            // Set color for chart point.
+            point.format.fill.setSolidColor('red');
+            yield context.sync();
+        })).catch(error => {
+            console.error("Error: " + error);
+            showNotification("Error", "An error occurred while building the frequency histogram.");
+        });
     }
     function buildCenters() {
         /*
@@ -69,11 +114,121 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
        Если её нет - вызвать showNotification
        Если есть, построить полноценный 3d график
        */
+        createNewCentersGraph();
     }
     Office.onReady(() => __awaiter(this, void 0, void 0, function* () {
         yield Excel.run((context) => __awaiter(this, void 0, void 0, function* () {
         })).catch(errorHandler);
     }));
+    /**
+     * Находит центры габаритных прямоугольников и записывает на лист графика
+     * @param cycles
+     */
+    function findCenters(cycles) {
+        Excel.run((context) => __awaiter(this, void 0, void 0, function* () {
+            let graphName = document.getElementById('graphId').innerText;
+            let sheetName = `Graph${graphName}`;
+            let centersTableName = `Centers${graphName}`;
+            let sourceDataTableName = `SourceData${graphName}`;
+            // Get the sheet
+            let sheet = context.workbook.worksheets.getItem(sheetName);
+            // Check if the centers table already exists
+            let tables = sheet.tables;
+            tables.load("items/name");
+            yield context.sync();
+            let centersTable = tables.items.find(t => t.name === centersTableName);
+            if (centersTable) {
+                showNotification("Table Exists", `The table "${centersTableName}" already exists.`);
+                return;
+            }
+            // Get the source data table
+            let sourceDataTable = tables.items.find(t => t.name === sourceDataTableName);
+            if (!sourceDataTable) {
+                showNotification("Error", `Source data table "${sourceDataTableName}" not found.`);
+                return;
+            }
+            // Load source data
+            let sourceDataRange = sourceDataTable.getDataBodyRange();
+            sourceDataRange.load("values");
+            yield context.sync();
+            let sourceData = sourceDataRange.values;
+            // Calculate centers
+            let centers = cycles.map(cycle => {
+                let points = cycle.indices.map(index => sourceData[index]); // Assuming indices are 1-based
+                let sumX = 0, sumY = 0, sumZ = 0;
+                points.forEach(point => {
+                    sumX += point[0];
+                    sumY += point[1];
+                    sumZ += point[2];
+                });
+                return [
+                    Number((sumX / points.length).toFixed(3)),
+                    Number((sumY / points.length).toFixed(3)),
+                    Number((sumZ / points.length).toFixed(3))
+                ];
+            });
+            // Create the centers table
+            let range = sheet.getRange("H13:J13");
+            centersTable = sheet.tables.add(range, true);
+            centersTable.name = centersTableName;
+            // Set the headers
+            let headerRange = centersTable.getHeaderRowRange();
+            headerRange.values = [["X", "Y", "Z"]];
+            // Set the data
+            let dataRange = centersTable.getDataBodyRange();
+            centersTable.rows.add(null, centers);
+            yield context.sync();
+        })).catch(error => {
+            console.error("Error: " + error);
+            showNotification("Error", "An error occurred while creating the centers table.");
+        });
+    }
+    /**
+     * Считает длины квазициклов и записывает на лист
+     *
+     * @param cycles
+     */
+    function findFrequency(cycles) {
+        Excel.run((context) => __awaiter(this, void 0, void 0, function* () {
+            let graphName = document.getElementById('graphId').innerText;
+            let sheetName = `Graph${graphName}`;
+            let tableName = `Frequencies${graphName}`;
+            // Get the sheet
+            let sheet = context.workbook.worksheets.getItem(sheetName);
+            // Check if the table already exists
+            let tables = sheet.tables;
+            tables.load("items/name");
+            yield context.sync();
+            let table = tables.items.find(t => t.name === tableName);
+            if (table) {
+                // Table exists, show notification
+                showNotification("Таблица существует", `Таблица "${tableName}" уже существует.`);
+                return;
+            }
+            // Create frequency counts
+            let frequencyCounts = new Array(10).fill(0);
+            cycles.forEach(cycle => {
+                let length = cycle.indices.length;
+                if (length > 0 && length <= 10) {
+                    frequencyCounts[length - 1]++;
+                }
+            });
+            // Create the table
+            let range = sheet.getRange("H10:Q11");
+            table = sheet.tables.add(range, true);
+            table.name = tableName;
+            // Set the headers
+            let headerRange = table.getHeaderRowRange();
+            headerRange.values = [["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]];
+            // Set the data
+            let dataRange = table.rows.getItemAt(0).getRange();
+            dataRange.values = [frequencyCounts];
+            yield context.sync();
+        })).catch(error => {
+            console.error("Error: " + error);
+            showNotification("Error", "An error occurred while creating the frequency table.");
+        });
+    }
     function loadSampleData() {
         return __awaiter(this, void 0, void 0, function* () {
             //TODO: Проверка алгоритмов квазицикла, убрать потом
@@ -112,6 +267,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
             }));
         });
     }
+    /**
+     * Функция для обработки квазициклов, находит их на выбранном графике и красит точки
+     *
+     * @param epsilon Эпсилон окрестность в которой следует искать пересечение
+     * @returns массив квазициклов
+     */
     function processQuasiCycles(epsilon) {
         return __awaiter(this, void 0, void 0, function* () {
             let graphName = document.getElementById('graphId').innerText; // получить с html, загружать как и в home
@@ -135,6 +296,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
                 }).then(context.sync);
             })).catch(errorHandler);
             colorQuasiCyclesInChart(graphName, result);
+            return result;
         });
     }
     function colorQuasiCyclesInChart(id, quasiCycles) {
@@ -291,6 +453,83 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         ];
         result = findMaximumNonIntersectingArrays(inputQuasiCycles);
         console.log(result);
+    }
+    function createNewCentersGraph() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var activeSheetData;
+            let graphName = document.getElementById('graphId').innerText;
+            yield Excel.run((context) => __awaiter(this, void 0, void 0, function* () {
+                var sourceRange = context.workbook.tables.getItem("Centers" + graphName).getDataBodyRange().load("values, rowCount, columnCount");
+                activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
+                return context.sync().then(function () {
+                    //Unique graph related code, use it to name every object related to one particular graph
+                    const id = "_" + window.crypto.randomUUID().substring(0, 5);
+                    const values = sourceRange.values;
+                    const _2dValues = convert3DTo2D(values, id);
+                    //Creating new sheet for graph
+                    const graphSheet = context.workbook.worksheets.add("Graph" + id);
+                    // Create a new table for angles values
+                    const angleTable = graphSheet.tables.add("O1:Q1", true);
+                    angleTable.name = "Angles" + id; // Set the table name
+                    angleTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
+                    angleTable.rows.add(null, [[255, 1, 50]]); // Set the data rows
+                    // Create a new table for angles in radians
+                    const angleRadTable = graphSheet.tables.add("S1:U1", true);
+                    angleRadTable.name = "AnglesRad" + id; // Set the table name
+                    angleRadTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
+                    angleRadTable.rows.add(null, [[
+                            `=(6.28/360)*${angleTable.name}[X]`,
+                            `=(6.28/360)*${angleTable.name}[Y]`,
+                            `=(6.28/360)*${angleTable.name}[Z]`
+                        ]]); // Set the data rows
+                    // Create a new table for coefficients values
+                    const coeff = [[
+                            `=-COS(${angleRadTable.name}[Y])*COS(${angleRadTable.name}[Z])`,
+                            `=COS(${angleRadTable.name}[Z])*-SIN(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])+SIN(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[X])`,
+                            `=SIN(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[Y])`,
+                            `=-SIN(${angleRadTable.name}[Z])*-SIN(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])+COS(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[X])`,
+                            `=-SIN(${angleRadTable.name}[Y])`,
+                            `=COS(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])`,
+                        ]];
+                    const coeffTable = graphSheet.tables.add("H1:M1", true);
+                    coeffTable.name = "coefficients" + id; // Set the table name
+                    coeffTable.getHeaderRowRange().values = [["p1", "p2", "q1", "q2", "r1", "r2"]]; // Set the header row
+                    coeffTable.rows.add(null, coeff); // Set the data rows
+                    // Create a new table for source values
+                    const sourceTable = graphSheet.tables.add("A1:C1", true);
+                    sourceTable.name = "SourceData" + id; // Set the table name
+                    sourceTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
+                    sourceTable.rows.add(null, values); // Set the data rows
+                    // Create a new table for converted values
+                    const _2dTable = graphSheet.tables.add("E1:F1", true);
+                    _2dTable.name = "GraphData" + id; // Set the table name
+                    _2dTable.getHeaderRowRange().values = [["X", "Y"]]; // Set the header row
+                    _2dTable.rows.add(null, _2dValues); // Set the data rows
+                    const chart = context.workbook.worksheets.getActiveWorksheet().charts.add("XYScatterSmooth", //XYScatterSmoothNoMarkers or XYScatterSmooth
+                    _2dTable.getRange(), //Range of table generated from source points
+                    Excel.ChartSeriesBy.columns);
+                    //Turn off default elements
+                    chart.axes.valueAxis.majorGridlines.visible = false;
+                    chart.axes.categoryAxis.majorGridlines.visible = false;
+                    chart.axes.valueAxis.visible = false;
+                    chart.axes.categoryAxis.visible = false;
+                    // Set chart title
+                    chart.title.text = "Движение центров";
+                    chart.name = id;
+                    return context.sync();
+                }).then(context.sync);
+            })).catch(errorHandler);
+            showNotification("Операция завершена", "Успешно построен график на листе " + activeSheetData.name);
+        });
+    }
+    function convert3DTo2D(values, id) {
+        const convertedValues = [];
+        for (const [x, y, z] of values) {
+            const x2d = "=SourceData" + id + "[@X]*coefficients" + id + "[p1]+coefficients" + id + "[q1]*SourceData" + id + "[@Y]+coefficients" + id + "[r2]*SourceData" + id + "[@Z]";
+            const y2d = "=SourceData" + id + "[@X]*coefficients" + id + "[p2]+coefficients" + id + "[q2]*SourceData" + id + "[@Y]+coefficients" + id + "[r2]*SourceData" + id + "[@Z]";
+            convertedValues.push([x2d, y2d]);
+        }
+        return convertedValues;
     }
 })();
 //# sourceMappingURL=Quasi.js.map
