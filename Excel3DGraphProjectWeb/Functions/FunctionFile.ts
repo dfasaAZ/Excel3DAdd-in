@@ -128,10 +128,10 @@ function showNotification(header, content) {
     //messageBanner.toggleExpansion();
 }
 /**
-  * Converts array of points [x,y,z] to it's 2d visualization
+  * преобразует массив точек [x,y,z] в его двухмерную проекцию
   * 
-  * @param values initial array
-  * @returns array of [x,y] coordinates
+  * @param values изначальные значения
+  * @returns массив [x,y] значений для подстановки в Excel
   */
 function convert3DTo2D(values, id) {
     const convertedValues = [];

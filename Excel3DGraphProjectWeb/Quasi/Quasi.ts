@@ -536,7 +536,7 @@
                 angleTable.name = "Angles" + id; // Set the table name
 
                 angleTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
-                angleTable.rows.add(null, [[255, 1, 50]]); // Set the data rows
+                angleTable.rows.add(null, [[`=Angles${graphName}[@X]`, `=Angles${graphName}[@Y]`, `=Angles${graphName}[@Z]`]]); // Set the data rows
 
                 // Create a new table for angles in radians
                 const angleRadTable = graphSheet.tables.add("S1:U1", true);

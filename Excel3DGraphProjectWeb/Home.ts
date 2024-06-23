@@ -222,7 +222,55 @@
                 chart.title.text = "3D Chart";
                 chart.name = id
 
-               
+
+                //Генерация осей
+                // Calculate maximum values
+                const maxX = Math.max(...values.map(v => v[0]));
+                const maxY = Math.max(...values.map(v => v[1]));
+                const maxZ = Math.max(...values.map(v => v[2]));
+                const maxest = Math.max(maxX, maxY, maxZ)*1.1;
+                // Create axis points table
+                const axisPoints = [
+                    [-maxest, 0, 0],
+                    [maxest, 0, 0],
+                    [0, -maxest, 0],
+                    [0, maxest, 0],
+                    [0, 0, -maxest],
+                    [0, 0, maxest]
+                ];
+
+                const axisTable = graphSheet.tables.add("W13:Y13", true);
+                axisTable.name = "sourceAxis" + id;
+                axisTable.getHeaderRowRange().values = [["X", "Y", "Z"]];
+                axisTable.rows.add(null, axisPoints);
+
+                // Convert 3D axis points to 2D
+                const axis2DValues = convert3DTo2DAxis(id);
+                const axis2DRange = graphSheet.getRange("P14:Q19");
+                axis2DRange.values = axis2DValues;
+
+                // ... (existing chart creation code)
+
+                // Add axis series to the chart
+                const xAxisSeries = chart.series.add();
+                xAxisSeries.setXAxisValues(graphSheet.getRange("P14:P15"));
+                xAxisSeries.setValues(graphSheet.getRange("Q14:Q15"));
+                xAxisSeries.name = "X Axis";
+                xAxisSeries.format.line.color = "#FF0000";
+
+                const yAxisSeries = chart.series.add();
+                yAxisSeries.setXAxisValues(graphSheet.getRange("P16:P17"));
+                yAxisSeries.setValues(graphSheet.getRange("Q16:Q17"));
+                yAxisSeries.name = "Y Axis";
+                yAxisSeries.format.line.color = "#00FF00";
+
+                const zAxisSeries = chart.series.add();
+                zAxisSeries.setXAxisValues(graphSheet.getRange("P18:P19"));
+                zAxisSeries.setValues(graphSheet.getRange("Q18:Q19"));
+                zAxisSeries.name = "Z Axis";
+                zAxisSeries.format.line.color = "#0000FF";
+
+                chart.activate();
                 return context.sync()
                 
             }).then(context.sync);
@@ -231,7 +279,15 @@
         handleSelectionChanged(null);
         showNotification("Операция завершена", "Успешно построен график на листе " + activeSheetData.name);
     }
-
+    function convert3DTo2DAxis(id: string) {
+        const convertedValues = [];
+        for (let i = 1; i <= 6; i++) {
+            const x2d = `=sourceAxis${id}[@[X]]*coefficients${id}[p1]+coefficients${id}[q1]*sourceAxis${id}[@[Y]]+coefficients${id}[r1]*sourceAxis${id}[@[Z]]`;
+            const y2d = `=sourceAxis${id}[@[X]]*coefficients${id}[p2]+coefficients${id}[q2]*sourceAxis${id}[@[Y]]+coefficients${id}[r2]*sourceAxis${id}[@[Z]]`;
+            convertedValues.push([x2d, y2d]);
+        }
+        return convertedValues;
+    }
     function displaySelectedCells() {
         Office.context.document.getSelectedDataAsync(Office.CoercionType.Text,
             function (result) {
