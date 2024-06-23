@@ -434,11 +434,7 @@
     }
 
   
-    /**
-     * AI generated quasi-cycle shit
-     * 
-     * Need to double check
-     */
+   
     function euclideanDistance(point1: [number, number, number], point2: [number, number, number]): number {
         const [x1, y1, z1] = point1;
         const [x2, y2, z2] = point2;
@@ -491,8 +487,6 @@
      * Function to check work of the qusicycle algorithm
      */
     function quasiTest() {
-        // Example usage
-        // const points: [number, number, number][] = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1.1, 2.1, 2.9]];
         const points: [number, number, number][] = [
             [0, 0, 0], [1, 0, 0], [2, 0, 0], [3, 0, 0], [1, 0, 0], // Single quasi-cycle
             [5, 5, 0], [6, 5, 0], [7, 5, 0], [8, 5, 0], [9, 5, 0], [10, 5, 0], [5.1, 5.1, 0], // Multiple quasi-cycles

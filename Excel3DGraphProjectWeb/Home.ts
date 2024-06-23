@@ -153,31 +153,31 @@
             var sourceRange = context.workbook.getSelectedRange().load("values, rowCount, columnCount");
             activeSheetData = context.workbook.worksheets.getActiveWorksheet().load("name");
             return context.sync().then(function () {
-                //Unique graph related code, use it to name every object related to one particular graph
+                //Уникальный кад графика, использовать его для создания всех связанным с графиком объектов
                 const id = "_"+window.crypto.randomUUID().substring(0,5);
                 const values = sourceRange.values;
                 const _2dValues = convert3DTo2D(values,id);
-                //Creating new sheet for graph
+                //Создание отдельного листа
                 const graphSheet = context.workbook.worksheets.add("Graph" + id);
 
-                // Create a new table for angles values
+                // Таблица для хранения углов обзора в градусах
                 const angleTable = graphSheet.tables.add("O1:Q1", true);
-                angleTable.name = "Angles" + id; // Set the table name
+                angleTable.name = "Angles" + id; 
 
-                angleTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
-                angleTable.rows.add(null, [[255,1,50]]); // Set the data rows
+                angleTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Заголовки
+                angleTable.rows.add(null, [[255,1,50]]); // Значения по умолчанию
 
-                // Create a new table for angles in radians
+                // Таблица для углов в радианах
                 const angleRadTable = graphSheet.tables.add("S1:U1", true);
-                angleRadTable.name = "AnglesRad" + id; // Set the table name
+                angleRadTable.name = "AnglesRad" + id; 
 
-                angleRadTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Set the header row
+                angleRadTable.getHeaderRowRange().values = [["X", "Y", "Z"]]; // Заголовки
                 angleRadTable.rows.add(null, [[
                     `=(6.28/360)*${angleTable.name}[X]`,
                     `=(6.28/360)*${angleTable.name}[Y]`,
                     `=(6.28/360)*${angleTable.name}[Z]`
-                ]]); // Set the data rows
-                // Create a new table for coefficients values
+                ]]); 
+                // Таблица с коэффициентами графика
                 const coeff = [[
                     `=-COS(${angleRadTable.name}[Y])*COS(${angleRadTable.name}[Z])`,
                     `=COS(${angleRadTable.name}[Z])*-SIN(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])+SIN(${angleRadTable.name}[Z])*COS(${angleRadTable.name}[X])`,
@@ -187,49 +187,49 @@
                     `=COS(${angleRadTable.name}[Y])*-SIN(${angleRadTable.name}[X])`,
                 ]];
                 const coeffTable = graphSheet.tables.add("H1:M1", true);
-                coeffTable.name = "coefficients"+id; // Set the table name
+                coeffTable.name = "coefficients"+id; 
 
-                coeffTable.getHeaderRowRange().values = [["p1", "p2", "q1", "q2", "r1", "r2"]]; // Set the header row
-                coeffTable.rows.add(null, coeff); // Set the data rows
+                coeffTable.getHeaderRowRange().values = [["p1", "p2", "q1", "q2", "r1", "r2"]];
+                coeffTable.rows.add(null, coeff); 
 
-                // Create a new table for source values
+                // Таблица с исходными значениями
                 const sourceTable = graphSheet.tables.add("A1:C1", true);
-                sourceTable.name = "SourceData"+id; // Set the table name
+                sourceTable.name = "SourceData"+id;
 
-                sourceTable.getHeaderRowRange().values = [["X", "Y","Z"]]; // Set the header row
-                sourceTable.rows.add(null, values); // Set the data rows
+                sourceTable.getHeaderRowRange().values = [["X", "Y","Z"]]; 
+                sourceTable.rows.add(null, values); 
 
 
-                // Create a new table for converted values
+                // Таблица с конвертированными значениями
                 const _2dTable = graphSheet.tables.add("E1:F1", true); 
-                _2dTable.name = "GraphData"+id; // Set the table name
+                _2dTable.name = "GraphData"+id; 
                
-                _2dTable.getHeaderRowRange().values = [["X", "Y"]]; // Set the header row
-                _2dTable.rows.add(null, _2dValues); // Set the data rows
+                _2dTable.getHeaderRowRange().values = [["X", "Y"]]; 
+                _2dTable.rows.add(null, _2dValues); 
 
                 const chart = context.workbook.worksheets.getActiveWorksheet().charts.add(
-                    "XYScatterSmooth",//XYScatterSmoothNoMarkers or XYScatterSmooth
-                    _2dTable.getRange(),//Range of table generated from source points
+                    "XYScatterSmooth",//XYScatterSmoothNoMarkers или XYScatterSmooth
+                    _2dTable.getRange(),
                     Excel.ChartSeriesBy.columns
                 );
-                //Turn off default elements
+                //Выключаем все лишние элементы графика
                 chart.axes.valueAxis.majorGridlines.visible = false;
                 chart.axes.categoryAxis.majorGridlines.visible = false;
                 chart.axes.valueAxis.visible = false;
                 chart.axes.categoryAxis.visible = false;
                 chart.onActivated.add(handleSelectionChanged);
-                // Set chart title
+                // Устанавливаем имя и заголовок
                 chart.title.text = "3D Chart";
                 chart.name = id
 
 
                 //Генерация осей
-                // Calculate maximum values
+                // Ищем максимальное значения
                 const maxX = Math.max(...values.map(v => v[0]));
                 const maxY = Math.max(...values.map(v => v[1]));
                 const maxZ = Math.max(...values.map(v => v[2]));
-                const maxest = Math.max(maxX, maxY, maxZ)*1.1;
-                // Create axis points table
+                const maxest = Math.max(maxX, maxY, maxZ)*1.1;//Берем с запасом 10%
+                // Таблица с точками оси (первые две - икс, вторые игрек, третьи зет)
                 const axisPoints = [
                     [-maxest, 0, 0],
                     [maxest, 0, 0],
@@ -244,14 +244,12 @@
                 axisTable.getHeaderRowRange().values = [["X", "Y", "Z"]];
                 axisTable.rows.add(null, axisPoints);
 
-                // Convert 3D axis points to 2D
+                // Переводим точки из 3d в 2d
                 const axis2DValues = convert3DTo2DAxis(id);
                 const axis2DRange = graphSheet.getRange("P14:Q19");
                 axis2DRange.values = axis2DValues;
 
-                // ... (existing chart creation code)
-
-                // Add axis series to the chart
+                // Добавляем оси
                 const xAxisSeries = chart.series.add();
                 xAxisSeries.setXAxisValues(graphSheet.getRange("P14:P15"));
                 xAxisSeries.setValues(graphSheet.getRange("Q14:Q15"));
